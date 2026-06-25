@@ -5,12 +5,12 @@ type CmsResponse = {
 };
 
 
-const API_URL = "/cms/provider-data/api/1/datastore/query/4pq5-n9py/0";
+// const API_URL = "/cms/provider-data/api/1/datastore/query/4pq5-n9py/0";
 
 export async function getFacilityByCCN(ccn: string): Promise<Facility | null> {
-  const url = `${API_URL}?conditions%5B0%5D%5Bproperty%5D=cms_certification_number_ccn&conditions%5B0%5D%5Boperator%5D=%3D&conditions%5B0%5D%5Bvalue%5D=${ccn}&limit=1`;
+//   const url = `${API_URL}?conditions%5B0%5D%5Bproperty%5D=cms_certification_number_ccn&conditions%5B0%5D%5Boperator%5D=%3D&conditions%5B0%5D%5Bvalue%5D=${ccn}&limit=1`;
 
-  const response = await fetch(url);
+  const response = await fetch(`/api/cms?ccn=${ccn}`);
 
   if (!response.ok) {
     throw new Error("CMS API failed");
