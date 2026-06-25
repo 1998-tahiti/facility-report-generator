@@ -6,7 +6,18 @@ import {
   getClaimsMetricsByCCN,
   type BonusMetrics,
 } from "../services/claimsApi";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  TextRun,
+} from "docx";
 
+import { saveAs } from "file-saver";
 import {
   getStateAverages,
   type StateAverages,
@@ -148,6 +159,134 @@ export default function ReportPreview({ facility }: Props) {
     doc.save("facility-report.pdf");
     };
 
+    const downloadWord = async () => {
+        const rows = [
+            ["Name of Facility", finalFacilityName],
+            ["Location", facility.location],
+            ["Census Capacity", String(facility.certifiedBeds)],
+            ["Current Census", formData.currentCensus || "N/A"],
+            ["EMR", formData.emr || "N/A"],
+            ["Type of Patient", formData.patientType || "N/A"],
+            ["Previous Coverage", formData.previousCoverage || "N/A"],
+            ["Previous Provider Performance", formData.providerPerformance || "N/A"],
+            ["Medical Coverage", formData.medicalCoverage || "N/A"],
+            ["Overall Rating", String(facility.overallRating)],
+            ["Health Inspection", String(facility.healthInspectionRating)],
+            ["Staffing", String(facility.staffingRating)],
+            ["Quality of Resident Care", String(facility.qmRating)],
+
+            ["Short Term Hospitalization", String(bonusMetrics?.shortTermHospitalization ?? "N/A")],
+            ["STR National Avg. for Hospitalization", String(stateAverages?.strHospitalizationNationalAvg ?? "N/A")],
+            ["STR State Avg. for Hospitalization", String(stateAverages?.strHospitalizationStateAvg ?? "N/A")],
+            ["STR ED Visit", String(bonusMetrics?.strEdVisit ?? "N/A")],
+            ["STR ED Visits National Avg.", String(stateAverages?.strEdVisitNationalAvg ?? "N/A")],
+            ["STR ED Visits State Avg.", String(stateAverages?.strEdVisitStateAvg ?? "N/A")],
+            ["LT Hospitalization", String(bonusMetrics?.ltHospitalization ?? "N/A")],
+            ["LT National Avg. for Hospitalization", String(stateAverages?.ltHospitalizationNationalAvg ?? "N/A")],
+            ["LT State Avg. for Hospitalization", String(stateAverages?.ltHospitalizationStateAvg ?? "N/A")],
+            ["ED Visit", String(bonusMetrics?.edVisit ?? "N/A")],
+            ["LT ED Visits National Avg.", String(stateAverages?.ltEdVisitNationalAvg ?? "N/A")],
+            ["LT ED Visits State Avg.", String(stateAverages?.ltEdVisitStateAvg ?? "N/A")],
+
+            ["Recommendations", formData.recommendations || "N/A"],
+            ["Medicare Source", medicareUrl],
+        ];
+
+        const doc = new Document({
+            sections: [
+            {
+                children: [
+                new Paragraph({
+                    alignment: "center",
+                    children: [
+                    new TextRun({
+                        text: "INFINITE — Managed by MEDELITE",
+                        bold: true,
+                        size: 32,
+                    }),
+                    ],
+                }),
+
+                new Paragraph({
+                    alignment: "center",
+                    children: [
+                    new TextRun({
+                        text: "FACILITY ASSESSMENT SNAPSHOT",
+                        bold: true,
+                        size: 24,
+                    }),
+                    ],
+                }),
+
+                new Paragraph({
+                    alignment: "center",
+                    children: [
+                    new TextRun({
+                        text: facility.state,
+                        bold: true,
+                        size: 22,
+                    }),
+                    ],
+                }),
+
+                new Table({
+                    width: {
+                        size: 9000,
+                        type: WidthType.DXA,
+                    },
+
+                    columnWidths: [4500, 4500],
+
+                    rows: rows.map(
+                        ([label, value]) =>
+                        new TableRow({
+                            children: [
+                            new TableCell({
+                                width: {
+                                size: 4500,
+                                type: WidthType.DXA,
+                                },
+                                children: [
+                                new Paragraph({
+                                    children: [
+                                    new TextRun({
+                                        text: label,
+                                        bold: true,
+                                    }),
+                                    ],
+                                }),
+                                ],
+                            }),
+
+                            new TableCell({
+                                width: {
+                                size: 4500,
+                                type: WidthType.DXA,
+                                },
+                                children: [
+                                new Paragraph({
+                                    children: [
+                                    new TextRun({
+                                        text: String(value),
+                                        italics: true,
+                                    }),
+                                    ],
+                                }),
+                                ],
+                            }),
+                            ],
+                        })
+                    ),
+                    }),
+                ],
+            },
+            ],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        saveAs(blob, "facility-report.docx");
+        };
+
   return (
     <div className="mx-auto mt-8 max-w-5xl rounded bg-white p-8 shadow-lg">
         <div className="mb-4 border-b pb-3 text-center">
@@ -162,13 +301,23 @@ export default function ReportPreview({ facility }: Props) {
         FACILITY ASSESSMENT SNAPSHOT
       </h2>
 
-      <button
-        onClick={downloadPDF}
-        className="mb-4 rounded cursor-pointer bg-blue-600 px-4 py-2 text-white"
-        >
-        Download PDF
-      </button>
-        
+      <div className="mb-4 flex gap-3">
+        <div className="mb-4 flex gap-3">
+            <button
+                onClick={downloadPDF}
+                className="cursor-pointer rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            >
+                Download PDF
+            </button>
+
+            <button
+                onClick={downloadWord}
+                className="cursor-pointer rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+            >
+                Download Word
+            </button>
+        </div>
+        </div>
       <table className="w-full border-collapse border-2 border-black text-base">
         <tbody>
           <tr>
