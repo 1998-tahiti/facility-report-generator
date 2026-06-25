@@ -1,38 +1,41 @@
-import Papa from "papaparse";
 import type { Facility } from "../types/Facility";
 
-type CsvRow = Record<string, string>;
+type CmsResponse = {
+  results: Array<Record<string, string>>;
+};
+
+
+const API_URL = "/cms/provider-data/api/1/datastore/query/4pq5-n9py/0";
 
 export async function getFacilityByCCN(ccn: string): Promise<Facility | null> {
-  const response = await fetch("/NH_ProviderInfo_May2026.csv");
-  const csvText = await response.text();
+  const url = `${API_URL}?conditions%5B0%5D%5Bproperty%5D=cms_certification_number_ccn&conditions%5B0%5D%5Boperator%5D=%3D&conditions%5B0%5D%5Bvalue%5D=${ccn}&limit=1`;
 
-  const parsed = Papa.parse<CsvRow>(csvText, {
-    header: true,
-    skipEmptyLines: true,
-  });
+  const response = await fetch(url);
 
-  const row = parsed.data.find(
-    (item) => item["CMS Certification Number (CCN)"] === ccn
-  );
+  if (!response.ok) {
+    throw new Error("CMS API failed");
+  }
+
+  const data: CmsResponse = await response.json();
+  const row = data.results[0];
 
   if (!row) {
     return null;
   }
 
   return {
-    ccn: row["CMS Certification Number (CCN)"] || "",
-    providerName: row["Provider Name"] || "",
-    providerAddress: row["Provider Address"] || "",
-    city: row["City/Town"] || "",
-    state: row["State"] || "",
-    zipCode: row["ZIP Code"] || "",
-    certifiedBeds: row["Number of Certified Beds"] || "",
-    averageResidentsPerDay: row["Average Number of Residents per Day"] || "",
-    overallRating: row["Overall Rating"] || "",
-    healthInspectionRating: row["Health Inspection Rating"] || "",
-    staffingRating: row["Staffing Rating"] || "",
-    qmRating: row["QM Rating"] || "",
-    location: row["Location"] || "",
+    ccn: row.cms_certification_number_ccn || "",
+    providerName: row.provider_name || "",
+    providerAddress: row.provider_address || "",
+    city: row.citytown || "",
+    state: row.state || "",
+    zipCode: row.zip_code || "",
+    certifiedBeds: row.number_of_certified_beds || "",
+    averageResidentsPerDay: row.average_number_of_residents_per_day || "",
+    overallRating: row.overall_rating || "",
+    healthInspectionRating: row.health_inspection_rating || "",
+    staffingRating: row.staffing_rating || "",
+    qmRating: row.qm_rating || "",
+    location: row.location || "",
   };
 }

@@ -11,8 +11,9 @@ export default function CCNSearch({ onFacilityFound }: Props) {
   const [error, setError] = useState("");
 
   const handleSearch = async () => {
-    setError("");
+  setError("");
 
+  try {
     const result = await getFacilityByCCN(ccn.trim());
 
     if (!result) {
@@ -21,8 +22,11 @@ export default function CCNSearch({ onFacilityFound }: Props) {
     }
 
     onFacilityFound(result);
-  };
-
+  } catch (err) {
+    console.error(err);
+    setError("CMS API error. Check console/network.");
+  }
+};
   return (
     <div className="space-y-4">
       <input
